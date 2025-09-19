@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  phpVersion: '8.3'
+
+steps:
+- task: UsePHPVersion@0
+  inputs:
+    version: '$(phpVersion)'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/grocy.zip'
+    replaceExistingArchive: true
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'Grocy-service-connection'
+    appType: 'webAppLinux'
+    appName: 'dev-grocy'
+    package: '$(Build.ArtifactStagingDirectory)/grocy.zip'
